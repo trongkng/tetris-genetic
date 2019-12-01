@@ -35,6 +35,7 @@ var grid = [
 [0,0,0,0,0,0],
 [0,0,0,0,0,0],
 ];
+var gridBackup = clone(grid);
 const NUM_COLUMNS=6;
 const NUM_ROWS=12;
 //Block shapes
@@ -263,19 +264,19 @@ function myInitialize() {
  			//unique identifier for a genome
  			id: Math.random(),
  			//The weight of each row cleared by the given move. the more rows that are cleared, the more this weight increases
- 			rowsCleared: Math.random() - 0.5,
+ 			rowsCleared: Math.random(),
  			//the absolute height of the highest column to the power of 1.5
  			//added so that the algorithm can be able to detect if the blocks are stacking too high
- 			weightedHeight: Math.random() - 0.5,
+ 			weightedHeight: -Math.random(),
  			//The sum of all the column’s heights
- 			cumulativeHeight: Math.random() - 0.5,
+ 			cumulativeHeight: -Math.random(),
  			//the highest column minus the lowest column
- 			relativeHeight: Math.random() - 0.5,
+ 			relativeHeight: -Math.random(),
  			//the sum of all the empty cells that have a block above them (basically, cells that are unable to be filled)
- 			holes: Math.random() * 0.5,
+ 			holes: -Math.random(),
  			// the sum of absolute differences between the height of each column
  			//(for example, if all the shapes on the grid lie completely flat, then the roughness would equal 0).
- 			roughness: Math.random() - 0.5,
+ 			roughness: -Math.random()
  		};
  		//add them to the array
  		genomes.push(genome);
@@ -826,27 +827,7 @@ function myInitialize() {
  */
  function reset() {
  	score = 0;
- 	grid = [[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	];
+ 	grid = clone(gridBackup)
  	moves = 0;
  	generateBag();
  	nextShape();
