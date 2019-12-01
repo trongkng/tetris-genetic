@@ -276,6 +276,7 @@ function myInitialize() {
  			// the sum of absolute differences between the height of each column
  			//(for example, if all the shapes on the grid lie completely flat, then the roughness would equal 0).
  			roughness: Math.random() - 0.5,
+
  		};
  		//add them to the array
  		genomes.push(genome);
