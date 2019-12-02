@@ -85,75 +85,88 @@
  * Returns an array of all the possible moves that could occur in the current state, rated by the parameters of the current genome.
  * @return {Array} An array of all the possible moves that could occur.
  */
- function getAllPossibleMoves() {
- 	var lastState = getState();
- 	var possibleMoves = [];
- 	var possibleMoveRatings = [];
- 	var iterations = 0;
- 	//for each possible rotation
- 	for (var rots = 0; rots < 4; rots++) {
+function getAllPossibleMoves() {
+ var lastState = getState();
+ var possibleMoves = [];
+ var possibleMoveRatings = [];
+ var iterations = 0;
+ //for each possible rotation
+ for (var rots = 0; rots < 4; rots++) {
 
- 		var oldX = [];
- 		//for each iteration
- 		for (var t = -5; t <= 5; t++) {
- 			iterations++;
- 			loadState(lastState);
- 			//rotate shape
- 			for (var j = 0; j < rots; j++) {
- 				rotateShape();
+ 	var oldX = [];
+ 	//for each iteration
+ 	for (var t = -5; t <= 5; t++) {
+ 		iterations++;
+ 		loadState(lastState);
+ 		//rotate shape
+ 		for (var j = 0; j < rots; j++) {
+ 			rotateShape();
+ 		}
+ 		//move left
+ 		if (t < 0) {
+ 			for (var l = 0; l < Math.abs(t); l++) {
+ 				moveLeft();
  			}
- 			//move left
- 			if (t < 0) {
- 				for (var l = 0; l < Math.abs(t); l++) {
- 					moveLeft();
- 				}
- 			//move right
- 			} else if (t > 0) {
- 				for (var r = 0; r < t; r++) {
- 					moveRight();
- 				}
- 			}
- 			//if the shape has moved at all
- 			if (!contains(oldX, currentShape.x)) {
- 				//move it down
- 				var moveDownResults = moveDown();
- 				while (moveDownResults.moved) {
- 					moveDownResults = moveDown();
- 				}
- 				//set the 7 parameters of a genome
- 				var algorithm = {
- 					rowsCleared: moveDownResults.rowsCleared,
- 					weightedHeight: Math.pow(getHeight(), 1.5),
- 					cumulativeHeight: getCumulativeHeight(),
- 					relativeHeight: getRelativeHeight(),
- 					holes: getHoles(),
- 					roughness: getRoughness()
- 				};
- 				//rate each move
- 				var rating = 0;
- 				rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
- 				rating += algorithm.weightedHeight * genomes[currentGenome].weightedHeight;
- 				rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
- 				rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
- 				rating += algorithm.holes * genomes[currentGenome].holes;
- 				rating += algorithm.roughness * genomes[currentGenome].roughness;
- 				//if the move loses the game, lower its rating
- 				if (moveDownResults.lose) {
- 					rating -= 500;
- 				}
- 				//push all possible moves, with their associated ratings and parameter values to an array
- 				 	//console.log(JSON.stringify(algorithm,null, 2));
- 				possibleMoves.push({rotations: rots, translation: t, rating: rating, algorithm: algorithm});
- 				//update the position of old X value
- 				oldX.push(currentShape.x);
+ 		//move right
+ 		} else if (t > 0) {
+ 			for (var r = 0; r < t; r++) {
+ 				moveRight();
  			}
  		}
+ 		//if the shape has moved at all
+ 		if (!contains(oldX, currentShape.x)) {
+ 			//move it down
+ 			var moveDownResults = moveDown();
+ 			while (moveDownResults.moved) {
+ 				moveDownResults = moveDown();
+ 			}
+ 			//set the 7 parameters of a genome
+ 			var algorithm = {
+ 				rowsCleared: moveDownResults.rowsCleared,
+ 				weightedHeight: Math.pow(getHeight(), 1.5),
+ 				cumulativeHeight: getCumulativeHeight(),
+ 				relativeHeight: getRelativeHeight(),
+ 				holes: getHoles(),
+ 				roughness: getRoughness()
+ 			};
+ 			//rate each move
+ 			var rating = 0;
+ 			rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
+ 			rating += algorithm.weightedHeight * genomes[currentGenome].weightedHeight;
+ 			rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
+ 			rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
+ 			rating += algorithm.holes * genomes[currentGenome].holes;
+ 			rating += algorithm.roughness * genomes[currentGenome].roughness;
+ 			//if the move loses the game, lower its rating
+ 			if (moveDownResults.lose) {
+ 				rating -= 500;
+ 			}
+ 			//push all possible moves, with their associated ratings and parameter values to an array
+ 			 	//console.log(JSON.stringify(algorithm,null, 2));
+ 			possibleMoves.push({rotations: rots, translation: t, rating: rating, algorithm: algorithm});
+ 			//update the position of old X value
+ 			oldX.push(currentShape.x);
+ 		}
  	}
- 	//get last state
- 	loadState(lastState);
- 	//return array of all possible moves
- 	return possibleMoves;
  }
+ //get last state
+ loadState(lastState);
+ //return array of all possible moves
+ return possibleMoves;
+}
+function getWeightedBlocks(){
+  removeShape();
+  sum = 0;
+  for (let i = 0 ; i < NUM_ROWS; i++){
+    for (let j = 0; j < NUM_COLS; j++) {
+      if (grid[i][j] != 0) {
+        sum += i;
+      }
+    }
+  }
+  return sum;
+  applyShape()
+}
 
 //Define 10x20 grid as the board
 var grid1 = [
