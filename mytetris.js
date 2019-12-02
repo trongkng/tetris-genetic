@@ -1,3 +1,160 @@
+/**
+ * Creates the initial population of genomes, each with random genes.
+ */
+ function createInitialPopulation() {
+ 	//inits the array
+ 	genomes = [];
+ 	//for a given population size
+ 	console.log("population size: " + populationSize);
+ 	for (var i = 0; i < populationSize; i++) {
+ 		//randomly initialize the 7 values that make up a genome
+ 		//these are all weight values that are updated through evolution
+ 		var genome = {
+ 			//unique identifier for a genome
+ 			id: Math.random(),
+ 			//The weight of each row cleared by the given move. the more rows that are cleared, the more this weight increases
+ 			rowsCleared: Math.random() - 0.5,
+ 			//the absolute height of the highest column to the power of 1.5
+ 			//added so that the algorithm can be able to detect if the blocks are stacking too high
+ 			weightedHeight: Math.random() - 0.5,
+ 			//The sum of all the column’s heights
+ 			cumulativeHeight: Math.random() - 0.5,
+ 			//the highest column minus the lowest column
+ 			relativeHeight: Math.random() - 0.5,
+ 			//the sum of all the empty cells that have a block above them (basically, cells that are unable to be filled)
+ 			holes: Math.random() * 0.5,
+ 			// the sum of absolute differences between the height of each column
+ 			//(for example, if all the shapes on the grid lie completely flat, then the roughness would equal 0).
+ 			roughness: Math.random() - 0.5,
+
+ 		};
+ 		//add them to the array
+ 		genomes.push(genome);
+ 	}
+ 	evaluateNextGenome();
+ 	//console.log(genomes);
+ 	console.log("end gnomes");
+ }
+
+/**
+ * Creates a child genome from the given parent genomes, and then attempts to mutate the child genome.
+ * @param  {Genome} mum The first parent genome.
+ * @param  {Genome} dad The second parent genome.
+ * @return {Genome}     The child genome.
+ */
+ function makeChild(mum, dad) {
+ 	//init the child given two genomes (its 7 parameters + initial fitness value)
+ 	var child = {
+ 		//unique id
+ 		id : Math.random(),
+ 		//all these params are randomly selected between the mom and dad genome
+ 		rowsCleared: randomChoice(mum.rowsCleared, dad.rowsCleared),
+ 		weightedHeight: randomChoice(mum.weightedHeight, dad.weightedHeight),
+ 		cumulativeHeight: randomChoice(mum.cumulativeHeight, dad.cumulativeHeight),
+ 		relativeHeight: randomChoice(mum.relativeHeight, dad.relativeHeight),
+ 		holes: randomChoice(mum.holes, dad.holes),
+ 		roughness: randomChoice(mum.roughness, dad.roughness),
+ 		//no fitness. yet.
+ 		fitness: -1
+ 	};
+ 	//mutation time!
+
+ 	//we mutate each parameter using our mutationstep
+ 	if (Math.random() < mutationRate) {
+ 		child.rowsCleared = child.rowsCleared + Math.random() * mutationStep * 2 - mutationStep;
+ 	}
+ 	if (Math.random() < mutationRate) {
+ 		child.weightedHeight = child.weightedHeight + Math.random() * mutationStep * 2 - mutationStep;
+ 	}
+ 	if (Math.random() < mutationRate) {
+ 		child.cumulativeHeight = child.cumulativeHeight + Math.random() * mutationStep * 2 - mutationStep;
+ 	}
+ 	if (Math.random() < mutationRate) {
+ 		child.relativeHeight = child.relativeHeight + Math.random() * mutationStep * 2 - mutationStep;
+ 	}
+ 	if (Math.random() < mutationRate) {
+ 		child.holes = child.holes + Math.random() * mutationStep * 2 - mutationStep;
+ 	}
+ 	if (Math.random() < mutationRate) {
+ 		child.roughness = child.roughness + Math.random() * mutationStep * 2 - mutationStep;
+ 	}
+ 	return child;
+ }
+
+/**
+ * Returns an array of all the possible moves that could occur in the current state, rated by the parameters of the current genome.
+ * @return {Array} An array of all the possible moves that could occur.
+ */
+ function getAllPossibleMoves() {
+ 	var lastState = getState();
+ 	var possibleMoves = [];
+ 	var possibleMoveRatings = [];
+ 	var iterations = 0;
+ 	//for each possible rotation
+ 	for (var rots = 0; rots < 4; rots++) {
+
+ 		var oldX = [];
+ 		//for each iteration
+ 		for (var t = -5; t <= 5; t++) {
+ 			iterations++;
+ 			loadState(lastState);
+ 			//rotate shape
+ 			for (var j = 0; j < rots; j++) {
+ 				rotateShape();
+ 			}
+ 			//move left
+ 			if (t < 0) {
+ 				for (var l = 0; l < Math.abs(t); l++) {
+ 					moveLeft();
+ 				}
+ 			//move right
+ 			} else if (t > 0) {
+ 				for (var r = 0; r < t; r++) {
+ 					moveRight();
+ 				}
+ 			}
+ 			//if the shape has moved at all
+ 			if (!contains(oldX, currentShape.x)) {
+ 				//move it down
+ 				var moveDownResults = moveDown();
+ 				while (moveDownResults.moved) {
+ 					moveDownResults = moveDown();
+ 				}
+ 				//set the 7 parameters of a genome
+ 				var algorithm = {
+ 					rowsCleared: moveDownResults.rowsCleared,
+ 					weightedHeight: Math.pow(getHeight(), 1.5),
+ 					cumulativeHeight: getCumulativeHeight(),
+ 					relativeHeight: getRelativeHeight(),
+ 					holes: getHoles(),
+ 					roughness: getRoughness()
+ 				};
+ 				//rate each move
+ 				var rating = 0;
+ 				rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
+ 				rating += algorithm.weightedHeight * genomes[currentGenome].weightedHeight;
+ 				rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
+ 				rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
+ 				rating += algorithm.holes * genomes[currentGenome].holes;
+ 				rating += algorithm.roughness * genomes[currentGenome].roughness;
+ 				//if the move loses the game, lower its rating
+ 				if (moveDownResults.lose) {
+ 					rating -= 500;
+ 				}
+ 				//push all possible moves, with their associated ratings and parameter values to an array
+ 				 	//console.log(JSON.stringify(algorithm,null, 2));
+ 				possibleMoves.push({rotations: rots, translation: t, rating: rating, algorithm: algorithm});
+ 				//update the position of old X value
+ 				oldX.push(currentShape.x);
+ 			}
+ 		}
+ 	}
+ 	//get last state
+ 	loadState(lastState);
+ 	//return array of all possible moves
+ 	return possibleMoves;
+ }
+
 //Define 10x20 grid as the board
 var grid1 = [
 [0,0,0,0,0,0,0,0,0,0],
@@ -248,43 +405,6 @@ function myInitialize() {
 	return false;
 };*/
 
-/**
- * Creates the initial population of genomes, each with random genes.
- */
- function createInitialPopulation() {
- 	//inits the array
- 	genomes = [];
- 	//for a given population size
- 	console.log("population size: " + populationSize);
- 	for (var i = 0; i < populationSize; i++) {
- 		//randomly initialize the 7 values that make up a genome
- 		//these are all weight values that are updated through evolution
- 		var genome = {
- 			//unique identifier for a genome
- 			id: Math.random(),
- 			//The weight of each row cleared by the given move. the more rows that are cleared, the more this weight increases
- 			rowsCleared: Math.random() - 0.5,
- 			//the absolute height of the highest column to the power of 1.5
- 			//added so that the algorithm can be able to detect if the blocks are stacking too high
- 			weightedHeight: Math.random() - 0.5,
- 			//The sum of all the column’s heights
- 			cumulativeHeight: Math.random() - 0.5,
- 			//the highest column minus the lowest column
- 			relativeHeight: Math.random() - 0.5,
- 			//the sum of all the empty cells that have a block above them (basically, cells that are unable to be filled)
- 			holes: Math.random() * 0.5,
- 			// the sum of absolute differences between the height of each column
- 			//(for example, if all the shapes on the grid lie completely flat, then the roughness would equal 0).
- 			roughness: Math.random() - 0.5,
-
- 		};
- 		//add them to the array
- 		genomes.push(genome);
- 	}
- 	evaluateNextGenome();
- 	//console.log(genomes);
- 	console.log("end gnomes");
- }
 
 /**
  * Evaluates the next genome in the population. If there is none, evolves the population.
@@ -362,124 +482,6 @@ function myInitialize() {
 	localStorage[generation]= JSON.stringify(archive);
 }
 
-/**
- * Creates a child genome from the given parent genomes, and then attempts to mutate the child genome.
- * @param  {Genome} mum The first parent genome.
- * @param  {Genome} dad The second parent genome.
- * @return {Genome}     The child genome.
- */
- function makeChild(mum, dad) {
- 	//init the child given two genomes (its 7 parameters + initial fitness value)
- 	var child = {
- 		//unique id
- 		id : Math.random(),
- 		//all these params are randomly selected between the mom and dad genome
- 		rowsCleared: randomChoice(mum.rowsCleared, dad.rowsCleared),
- 		weightedHeight: randomChoice(mum.weightedHeight, dad.weightedHeight),
- 		cumulativeHeight: randomChoice(mum.cumulativeHeight, dad.cumulativeHeight),
- 		relativeHeight: randomChoice(mum.relativeHeight, dad.relativeHeight),
- 		holes: randomChoice(mum.holes, dad.holes),
- 		roughness: randomChoice(mum.roughness, dad.roughness),
- 		//no fitness. yet.
- 		fitness: -1
- 	};
- 	//mutation time!
-
- 	//we mutate each parameter using our mutationstep
- 	if (Math.random() < mutationRate) {
- 		child.rowsCleared = child.rowsCleared + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.weightedHeight = child.weightedHeight + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.cumulativeHeight = child.cumulativeHeight + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.relativeHeight = child.relativeHeight + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.holes = child.holes + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.roughness = child.roughness + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	return child;
- }
-
-/**
- * Returns an array of all the possible moves that could occur in the current state, rated by the parameters of the current genome.
- * @return {Array} An array of all the possible moves that could occur.
- */
- function getAllPossibleMoves() {
- 	var lastState = getState();
- 	var possibleMoves = [];
- 	var possibleMoveRatings = [];
- 	var iterations = 0;
- 	//for each possible rotation
- 	for (var rots = 0; rots < 4; rots++) {
-
- 		var oldX = [];
- 		//for each iteration
- 		for (var t = -5; t <= 5; t++) {
- 			iterations++;
- 			loadState(lastState);
- 			//rotate shape
- 			for (var j = 0; j < rots; j++) {
- 				rotateShape();
- 			}
- 			//move left
- 			if (t < 0) {
- 				for (var l = 0; l < Math.abs(t); l++) {
- 					moveLeft();
- 				}
- 			//move right
- 			} else if (t > 0) {
- 				for (var r = 0; r < t; r++) {
- 					moveRight();
- 				}
- 			}
- 			//if the shape has moved at all
- 			if (!contains(oldX, currentShape.x)) {
- 				//move it down
- 				var moveDownResults = moveDown();
- 				while (moveDownResults.moved) {
- 					moveDownResults = moveDown();
- 				}
- 				//set the 7 parameters of a genome
- 				var algorithm = {
- 					rowsCleared: moveDownResults.rowsCleared,
- 					weightedHeight: Math.pow(getHeight(), 1.5),
- 					cumulativeHeight: getCumulativeHeight(),
- 					relativeHeight: getRelativeHeight(),
- 					holes: getHoles(),
- 					roughness: getRoughness()
- 				};
- 				//rate each move
- 				var rating = 0;
- 				rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
- 				rating += algorithm.weightedHeight * genomes[currentGenome].weightedHeight;
- 				rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
- 				rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
- 				rating += algorithm.holes * genomes[currentGenome].holes;
- 				rating += algorithm.roughness * genomes[currentGenome].roughness;
- 				//if the move loses the game, lower its rating
- 				if (moveDownResults.lose) {
- 					rating -= 500;
- 				}
- 				//push all possible moves, with their associated ratings and parameter values to an array
- 				 	//console.log(JSON.stringify(algorithm,null, 2));
- 				possibleMoves.push({rotations: rots, translation: t, rating: rating, algorithm: algorithm});
- 				//update the position of old X value
- 				oldX.push(currentShape.x);
- 			}
- 		}
- 	}
- 	//get last state
- 	loadState(lastState);
- 	//return array of all possible moves
- 	return possibleMoves;
- }
 
 /**
  * Returns the highest rated move in the given array of moves.
@@ -1172,8 +1174,8 @@ function myInitialize() {
 
 /**
  * Returns a random number that is determined from a seeded random number generator.
- * @param  {Number} min The minimum number, inclusive.
  * @param  {Number} max The maximum number, exclusive.
+ * @param  {Number} min The minimum number, inclusive.
  * @return {Number}     The generated random number.
  */
  function seededRandom(min, max) {
