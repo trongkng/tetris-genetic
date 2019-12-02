@@ -14,13 +14,6 @@
  			id: Math.random(),
  			//The weight of each row cleared by the given move. the more rows that are cleared, the more this weight increases
  			rowsCleared: Math.random() - 0.5,
- 			//the absolute height of the highest column to the power of 1.5
- 			//added so that the algorithm can be able to detect if the blocks are stacking too high
- 			weightedHeight: Math.random() - 0.5,
- 			//The sum of all the column’s heights
- 			cumulativeHeight: Math.random() - 0.5,
- 			//the highest column minus the lowest column
- 			relativeHeight: Math.random() - 0.5,
  			//the sum of all the empty cells that have a block above them (basically, cells that are unable to be filled)
  			holes: Math.random() * 0.5,
  			// the sum of absolute differences between the height of each column
@@ -49,9 +42,6 @@
  		id : Math.random(),
  		//all these params are randomly selected between the mom and dad genome
  		rowsCleared: randomChoice(mum.rowsCleared, dad.rowsCleared),
- 		weightedHeight: randomChoice(mum.weightedHeight, dad.weightedHeight),
- 		cumulativeHeight: randomChoice(mum.cumulativeHeight, dad.cumulativeHeight),
- 		relativeHeight: randomChoice(mum.relativeHeight, dad.relativeHeight),
  		holes: randomChoice(mum.holes, dad.holes),
  		roughness: randomChoice(mum.roughness, dad.roughness),
  		//no fitness. yet.
@@ -62,15 +52,6 @@
  	//we mutate each parameter using our mutationstep
  	if (Math.random() < mutationRate) {
  		child.rowsCleared = child.rowsCleared + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.weightedHeight = child.weightedHeight + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.cumulativeHeight = child.cumulativeHeight + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.relativeHeight = child.relativeHeight + Math.random() * mutationStep * 2 - mutationStep;
  	}
  	if (Math.random() < mutationRate) {
  		child.holes = child.holes + Math.random() * mutationStep * 2 - mutationStep;
@@ -123,18 +104,12 @@ function getAllPossibleMoves() {
  			//set the 7 parameters of a genome
  			var algorithm = {
  				rowsCleared: moveDownResults.rowsCleared,
- 				weightedHeight: Math.pow(getHeight(), 1.5),
- 				cumulativeHeight: getCumulativeHeight(),
- 				relativeHeight: getRelativeHeight(),
  				holes: getHoles(),
  				roughness: getRoughness()
  			};
  			//rate each move
  			var rating = 0;
  			rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
- 			rating += algorithm.weightedHeight * genomes[currentGenome].weightedHeight;
- 			rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
- 			rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
  			rating += algorithm.holes * genomes[currentGenome].holes;
  			rating += algorithm.roughness * genomes[currentGenome].roughness;
  			//if the move loses the game, lower its rating
