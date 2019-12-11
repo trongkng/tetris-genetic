@@ -1,6 +1,6 @@
 const script = require('./mytetris.js');
 script.initialize();
-for (let i = 0; i < 20000; i++) script.update();
-let result = script.getStore();
-console.log(result.elites);
-for (let i = 0; i < 20000; i++) script.update();
+for (let i = 0; i < 500000; i++) script.update();
+let store = script.getStore();
+console.log(Object.keys(store).map( (index) => {if (store[index].archive) return store[index].archive.elites}));
+//let result = script.getStore();

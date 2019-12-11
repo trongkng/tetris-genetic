@@ -1,6 +1,84 @@
+//max number of moves allowed in a generation
+var moveLimit = 200;
+
+//stores number of genomes, init at 50
+var populationSize = 50;
+
+function createInitialPopulation() {
+ //inits the array
+ genomes = [];
+ //for a given population size
+ console.log("population size: " + populationSize);
+ for (var i = 0; i < populationSize; i++) {
+ 	//randomly initialize the 7 values that make up a genome
+ 	//these are all weight values that are updated through evolution
+ 	var genome = {
+ 		//unique identifier for a genome
+ 		id: Math.random(),
+ 		//The weight of each row cleared by the given move. the more rows that are cleared, the more this weight increases
+ 		/*rowsCleared: initialPopulationParamMultiplier * (Math.random() - 0.5) ,
+ 		//the absolute height of the highest column to the power of 1.5
+ 		//added so that the algorithm can be able to detect if the blocks are stacking too high
+ 		weightedHeight: initialPopulationParamMultiplier * (Math.random() - 0.5),
+ 		//The sum of all the column’s heights
+ 		cumulativeHeight: initialPopulationParamMultiplier * (Math.random() - 0.5),
+ 		//the highest column minus the lowest column
+ 		relativeHeight: initialPopulationParamMultiplier * (Math.random() - 0.5),
+ 		//the sum of all the empty cells that have a block above them (basically, cells that are unable to be filled)
+ 		holes: initialPopulationParamMultiplier * (Math.random() - 0.5),
+ 		// the sum of absolute differences between the height of each column
+ 		//(for example, if all the shapes on the grid lie completely flat, then the roughness would equal 0).
+ 		roughness:  initialPopulationParamMultiplier * (Math.random() - 0.5),*/
+ 		position: Array(NUM_FEATURES),
+ 		//velocity: Array(NUM_FEATURES),
+ 		deadAtGeneration: []
+ 	};
+ 	for (let i = 0 ; i < NUM_FEATURES; i ++) {
+ 	  genome.position[i] = Math.random() - 0.5;
+ 	  //genome.velocity[i] = Math.random() - 0.5;
+ 	}
+ 	//setPositionVectorForGenome(genome);
+ 	genome.personalBest = clone(genome.position);
+ 	genome.personalBestFitness = 0;
+ 	//add them to the array
+ 	genomes.push(genome);
+ }
+ evaluateNextGenome();
+ //console.log(genomes);
+ localStorage[0] = {};
+ localStorage[0].genomes = clone(genomes);
+ localStorage[0].archive={};
+ localStorage[0].archive.elites={};
+ localStorage[0].globalBestFitness=0;
+ localStorage[0].globalBest = clone(genomes[0]);
+ console.log("end gnomes");
+}
+const mapIndexToName = {
+  '0': 'rowsCleared',
+  '1': 'weightedHeight',
+  '2': 'cumulativeHeight',
+  '3': 'relativeHeight',
+  '4': 'holes',
+  '5': 'roughness',
+};
+const featuresChosen = [0, 6, 2, 3, 4, 5];
+const featuresFunction = {
+  '0' : getRowsCleared,
+  '1' : getWeightedBlocks,
+  '2' : getCumulativeHeight,
+  '3' : getRelativeHeight,
+  '4' : getHoles,
+  '5' : getRoughness,
+  '6' : getLargestHeight,
+  '7' : getRowCountWithAtLeastOneHole,
+  '8' : getSumOfWellDepths,
+};
+function getRowsCleared(value){
+  return value;
+}
 /**
  * Creates the initial population of genomes, each with random genes.
- */
+ 
  function createInitialPopulation() {
  	//inits the array
  	genomes = [];
@@ -34,14 +112,37 @@
  	evaluateNextGenome();
  	//console.log(genomes);
  	console.log("end gnomes");
+ }*/
+function makeChild(mum, dad) {
+ //init the child given two genomes (its 7 parameters + initial fitness value)
+ var child = {
+ 	//unique id
+ 	id : Math.random(),
+ 	fitness: -1,
+ 	position: []
+ };
+ for (let index = 0 ; index < NUM_FEATURES; index ++)
+   {
+     child.position[index] = randomChoice(mum.position[index], dad.position[index]);
+   }
+ 			  
+ //mutation time!
+
+ //we mutate each parameter using our mutationstep
+ for (let i = 0 ; i < NUM_FEATURES; i++) {
+ 	if (Math.random() < mutationRate) {
+ 		child.position[i] = child.position[i] + Math.random() * mutationStep * 2 - mutationStep;
+ 	}
  }
+ return child;
+}
 
 /**
  * Creates a child genome from the given parent genomes, and then attempts to mutate the child genome.
  * @param  {Genome} mum The first parent genome.
  * @param  {Genome} dad The second parent genome.
  * @return {Genome}     The child genome.
- */
+ 
  function makeChild(mum, dad) {
  	//init the child given two genomes (its 7 parameters + initial fitness value)
  	var child = {
@@ -79,12 +180,12 @@
  		child.roughness = child.roughness + Math.random() * mutationStep * 2 - mutationStep;
  	}
  	return child;
- }
+ }*/
 
 /**
  * Returns an array of all the possible moves that could occur in the current state, rated by the parameters of the current genome.
  * @return {Array} An array of all the possible moves that could occur.
- */
+ 
 function getAllPossibleMoves() {
  var lastState = getState();
  var possibleMoves = [];
@@ -92,7 +193,6 @@ function getAllPossibleMoves() {
  var iterations = 0;
  //for each possible rotation
  for (var rots = 0; rots < 4; rots++) {
-
  	var oldX = [];
  	//for each iteration
  	for (var t = -5; t <= 5; t++) {
@@ -123,7 +223,7 @@ function getAllPossibleMoves() {
  			//set the 7 parameters of a genome
  			var algorithm = {
  				rowsCleared: moveDownResults.rowsCleared,
- 				weightedHeight: Math.pow(getHeight(), 1.5),
+ 				weightedHeight: Math.pow(getLargestHeight(), 1.5),
  				cumulativeHeight: getCumulativeHeight(),
  				relativeHeight: getRelativeHeight(),
  				holes: getHoles(),
@@ -153,12 +253,117 @@ function getAllPossibleMoves() {
  loadState(lastState);
  //return array of all possible moves
  return possibleMoves;
+}*/
+/**
+ * Returns an array of all the possible moves that could occur in the current state, rated by the parameters of the current genome.
+ * @return {Array} An array of all the possible moves that could occur.
+ */
+function getAllPossibleMoves() {
+ var lastState = getState();
+ var possibleMoves = [];
+ var possibleMoveRatings = [];
+ var iterations = 0;
+ //for each possible rotation
+ //if (isNaN (genomes[currentGenome].roughness)) {
+//   console.log("detected Nan");
+ //}
+ for (var rots = 0; rots < 4; rots++) {
+
+ 	var oldX = [];
+ 	//for each iteration
+ 	for (var t = -NUM_COLUMNS/2; t <= NUM_COLUMNS/2; t++) {
+ 		iterations++;
+ 		loadState(lastState);
+ 		//rotate shape
+ 		for (var j = 0; j < rots; j++) {
+ 			rotateShape();
+ 		}
+ 		//move left
+ 		if (t < 0) {
+ 			for (var l = 0; l < Math.abs(t); l++) {
+ 				moveLeft();
+ 			}
+ 		//move right
+ 		} else if (t > 0) {
+ 			for (var r = 0; r < t; r++) {
+ 				moveRight();
+ 			}
+ 		}
+ 		//if the shape has moved at all
+ 		if (!contains(oldX, currentShape.x)) {
+ 			//move it down
+ 			var moveDownResults = moveDown();
+ 			while (moveDownResults.moved) {
+ 				moveDownResults = moveDown();
+ 			}
+ 			//set the 7 parameters of a genome
+     	/*  '0': 'rowsCleared',
+      '1': 'weightedHeight',
+      '2': 'cumulativeHeight',
+      '3': 'relativeHeight',
+      '4': 'holes',
+      '5': 'roughness',
+      */
+      let algorithm = [];
+ 			for (let i = 0; i < NUM_FEATURES; i ++)
+   			  algorithm[i] = featuresFunction[featuresChosen[i]](moveDownResults.rowsCleared);
+ 				//maximumHeight: Math.pow(getMaximumHeight(), 1.5),
+ 				//totalHeight: getTotalHeight(),
+ 				//relativeHeight: getRelativeHeight(),
+ 				/*holes: getHoles(),
+  			rowsCleared: moveDownResults.rowsCleared,
+ 				roughness: getRoughness(),
+ 				weightedHeight: getWeightedBlocks(),
+ 				cumulativeHeight: getCumulativeHeight(),
+ 				rowCountWithAtLeastOneHole: getRowCountWithAtLeastOneHole(),
+ 			};*/
+ 			//rate each move
+ 			var rating = 0;
+ 			// rating += algorithm.maximumHeight * genomes[currentGenome].maximumHeight;
+      // rating += algorithm.totalHeight * genomes[currentGenome].totalHeight;
+ 			// rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
+ 			/*rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
+ 			rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
+ 			rating += algorithm.weightedBlocks * genomes[currentGenome].weightedBlocks;
+ 			rating += algorithm.rowCountWithAtLeastOneHole * genomes[currentGenome]
+ 			rating += algorithm.holes * genomes[currentGenome].holes;
+ 			rating += algorithm.roughness * genomes[currentGenome].roughness;*/
+ 			for (let i = 0 ; i < featuresChosen.length ; i++) {
+ 			  rating += algorithm[i] * genomes[currentGenome].position[i];
+ 			}
+ 			if ( isNaN(rating)) {
+ 			  //console.log('found rating NaN');
+ 			  //console.log(genomes[currentGenome]);
+ 			}
+ 			//if the move loses the game, lower its rating
+ 			if (moveDownResults.lose) {
+ 				rating -= 500;
+ 			}
+ 			//push all possible moves, with their associated ratings and parameter values to an array
+ 			 	//console.log(JSON.stringify(algorithm,null, 2));
+ 			possibleMoves.push({rotations: rots, translation: t, rating: rating, algorithm: algorithm});
+ 			
+
+ 			//update the position of old X value
+ 			oldX.push(currentShape.x);
+ 		}
+ 	}
+ }
+ //get last state
+ loadState(lastState);
+ //return array of all possible moves
+ if ( possibleMoves[0] !== null && isNaN(possibleMoves[0]) && Object.keys(possibleMoves).length === 0) {
+   //console.log("Found Nan");
+   //console.log(possibleMoves);
+ }
+ return possibleMoves;
 }
+
 function getWeightedBlocks(){
   removeShape();
   sum = 0;
   for (let i = 0 ; i < NUM_ROWS; i++){
-    for (let j = 0; j < NUM_COLS; j++) {
+    for (let j = 0; j < NUM_COLUMNS; j++) {
       if (grid[i][j] != 0) {
         sum += i;
       }
@@ -167,6 +372,138 @@ function getWeightedBlocks(){
   return sum;
   applyShape()
 }
+function getCumulativeHeight(){
+  removeShape();
+  sum = 0;
+  for (let i = 0 ; i < NUM_ROWS; i++){
+    for (let j = 0; j < NUM_COLUMNS; j++) {
+      if (grid[i][j] !== 0) {
+        sum += i * (i + 1) /2;
+      }
+    }
+  }
+  applyShape();
+  return sum;
+}
+function getRowCountWithAtLeastOneHole(){
+  removeShape();
+  sum = 0;
+  for (let i = 0 ; i < NUM_ROWS; i++){
+    row = false;
+    if ( !row )
+      for (let j = 0; j < NUM_COLUMNS; j++) {
+        if (grid[i][j] !== 0) {
+          row = true;
+          sum += 1;
+          break;
+        }
+      }
+  }
+  applyShape()
+  return sum;
+}
+function getSumOfWellDepths(){
+  removeShape();
+  sum = 0;
+  for (let i = 0 ; i < NUM_ROWS; i++){
+    for (let j = 0; j < NUM_COLUMNS; j++) {
+      if (grid[i][j] !== 0) {
+        sum += i;
+      }
+    }
+  }
+  applyShape()
+  return sum;
+}
+
+/**
+ * Makes a move, which is decided upon using the parameters in the current genome.
+ */
+ function makeNextMove() {
+ 	//increment number of moves taken
+ 	movesTaken++;
+ 	//if its over the limit of moves
+  //if (isNaN (genomes[currentGenome].roughness)) {
+  //     console.log("detected Nan start of makeNextMove");
+  //}
+ 	if (movesTaken > moveLimit) {
+ 		//update this genomes fitness value using the game score
+ 		genomes[currentGenome].fitness = clone(score);
+ 		//and evaluates the next genome
+ 		evaluateNextGenome();
+ 	} else {
+ 		//time to make a move
+
+ 		//we're going to re-draw, so lets store the old drawing
+ 		var oldDraw = clone(draw);
+ 		draw = false;
+ 		//get all the possible moves
+
+ 		var possibleMoves = getAllPossibleMoves();
+ 		//lets store the current state since we will update it
+ 		var lastState = getState();
+ 		//whats the next shape to play
+ 		nextShape();
+ 		//for each possible move
+ 		for (var i = 0; i < possibleMoves.length; i++) {
+ 			//get the best move. so were checking all the possible moves, for each possible move. moveception
+ 			var nextMove = getHighestRatedMove(getAllPossibleMoves());
+ 			//add that rating to an array of highest rates moves
+ 			possibleMoves[i].rating += nextMove.rating;
+ 		}
+ 		//load current state
+ 		loadState(lastState);
+ 		//get the highest rated move ever
+ 		var move = getHighestRatedMove(possibleMoves);
+ 		//then rotate the shape as it says too
+ 		for (var rotations = 0; rotations < move.rotations; rotations++) {
+ 			rotateShape();
+ 		}
+ 		//and move left as it says
+ 		if (move.translation < 0) {
+ 			for (var lefts = 0; lefts < Math.abs(move.translation); lefts++) {
+ 				moveLeft();
+ 			}
+ 			//and right as it says
+ 		} else if (move.translation > 0) {
+ 			for (var rights = 0; rights < move.translation; rights++) {
+ 				moveRight();
+ 			}
+ 		}
+ 		//update our move algorithm
+ 		if (inspectMoveSelection) {
+ 			moveAlgorithm = move.algorithm;
+ 		}
+ 		/*
+ 		/* update our coordinates here */
+ 		/*let currGenome = genomes[currentGenome];
+ 		let tempVector = Array(NUM_FEATURES);
+ 		for ( let i = 0; i < NUM_FEATURES; i++ ) {
+ 		  if ( tempVector[i] == -1000 ) {
+ 		    tempVector[i] = currGenome.velocity[i];
+ 		  } else {
+ 		    tempVector[i] =
+ 		      currGenome.velocity[i]
+ 		        + 2 * Math.random() *
+ 		          //personal best - current
+ 		          ( currGenome.personalBest[i] - currGenome.position[ i ] )
+ 		        + 2 * Math.random() *
+ 		          //global best - current
+ 		          ( globalBest.position[ featuresChosen[i] ] - currGenome.position[ i ] )
+ 		  }
+ 		  currGenome.velocity[i] = curr.velocity[i] + tempVector[i];
+ 		  currGenome.position[i] += currGenome.velocity[i];
+ 		}*/
+    
+ 		//and set the old drawing to the current
+ 		draw = oldDraw;
+ 		//output the state to the screen
+ 		//output();
+ 		//and update the score
+ 		//updateScore();
+ 	}
+ }
+
 
 //Define 10x20 grid as the board
 var grid1 = [
@@ -205,8 +542,6 @@ var grid = [
 [0,0,0,0,0,0],
 [0,0,0,0,0,0],
 ];
-const NUM_COLUMNS=6;
-const NUM_ROWS=12;
 //Block shapes
 var shapes = {
 	I: [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]],
@@ -218,6 +553,10 @@ var shapes = {
 	Z: [[7,7,0], [0,7,7], [0,0,0]]
 };
 var localStorage = {};
+var gridBackup = clone(grid);
+const NUM_COLUMNS=6;
+const NUM_ROWS=12;
+const NUM_FEATURES=6;
 //Block colors
 var colors = ["F92338", "C973FF", "1C76BC", "FEE356", "53D504", "36E0FF", "F8931D"];
 
@@ -255,8 +594,7 @@ var ai = true;
 var draw = true;
 //how many so far?
 var movesTaken = 0;
-//max number of moves allowed in a generation
-var moveLimit = 500;
+
 //consists of move the 7 move parameters
 var moveAlgorithm = {};
 //set to highest rate move
@@ -264,8 +602,6 @@ var inspectMoveSelection = false;
 
 
 //GENETIC ALGORITHM VALUES
-//stores number of genomes, init at 50
-var populationSize = 50;
 //stores genomes
 var genomes = [];
 //index of current genome in genomes array
@@ -490,9 +826,15 @@ function myInitialize() {
 	archive.genomes = clone(genomes);
 	//and set current gen
 	archive.currentGeneration = clone(generation);
-	console.log(JSON.stringify(archive));
+	//console.log(JSON.stringify(archive));
 	//store archive, thanks JS localstorage! (short term memory)
-	localStorage[generation]= JSON.stringify(archive);
+	//archive.elites.push(clone(genomes[0]));
+ 	//console.log("Elite's fitness: " + genomes[0].fitness);
+	archive.genomes = clone(genomes);
+	//and set current gen
+	archive.currentGeneration = clone(generation);
+  localStorage[generation]= {};
+  localStorage[generation].archive= archive;
 }
 
 
@@ -546,7 +888,6 @@ function myInitialize() {
  		evaluateNextGenome();
  	} else {
  		//time to make a move
-
  		//we're going to re-draw, so lets store the old drawing
  		var oldDraw = clone(draw);
  		draw = false;
@@ -625,7 +966,7 @@ function myInitialize() {
  	//output the state to the screen
  	output();
  	//and update the score
- 	updateScore();
+ 	//updateScore();
  }
 
 /**
@@ -1123,7 +1464,7 @@ function myInitialize() {
  * Returns the height of the biggest column on the grid.
  * @return {Number} The absolute height.
  */
- function getHeight() {
+ function getLargestHeight() {
  	removeShape();
  	var peaks = Array(NUM_COLUMNS).fill(NUM_ROWS);
  	for (var row = 0; row < grid.length; row++) {
@@ -1281,7 +1622,7 @@ module.exports = {
  getHolesArray: getHolesArray,
  getRoughness: getRoughness,
  getRelativeHeight: getRelativeHeight,
- getHeight: getHeight,
+ getLargestHeight: getLargestHeight,
  loadArchive: loadArchive,
  clone: clone,
  randomProperty: randomProperty,
