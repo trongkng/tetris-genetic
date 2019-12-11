@@ -13,21 +13,25 @@
  			//unique identifier for a genome
  			id: Math.random(),
  			//The weight of each row cleared by the given move. the more rows that are cleared, the more this weight increases
- 			rowsCleared: Math.random() - 0.5,
+ 			//rowsCleared: Math.random() - 0.5,
  			//the absolute height of the highest column to the power of 1.5
  			//added so that the algorithm can be able to detect if the blocks are stacking too high
- 			weightedHeight: Math.random() - 0.5,
+ 			//weightedHeight: Math.random() - 0.5,
  			//The sum of all the column’s heights
- 			cumulativeHeight: Math.random() - 0.5,
+ 			//cumulativeHeight: Math.random() - 0.5,
  			//the highest column minus the lowest column
- 			relativeHeight: Math.random() - 0.5,
+ 			//relativeHeight: Math.random() - 0.5,
  			//the sum of all the empty cells that have a block above them (basically, cells that are unable to be filled)
- 			holes: Math.random() * 0.5,
+ 			//holes: Math.random() * 0.5,
  			// the sum of absolute differences between the height of each column
  			//(for example, if all the shapes on the grid lie completely flat, then the roughness would equal 0).
- 			roughness: Math.random() - 0.5,
-
+ 			//roughness: Math.random() - 0.5,
+ 		  position: Array(NUM_FEATURES),
  		};
+ 		for (let i = 0 ; i < NUM_FEATURES; i ++) {
+ 	    genome.position[i] = Math.random() - 0.5;
+ 	    //genome.velocity[i] = Math.random() - 0.5;
+ 	  }
  		//add them to the array
  		genomes.push(genome);
  	}
@@ -35,7 +39,65 @@
  	//console.log(genomes);
  	console.log("end gnomes");
  }
+const featuresChosen = [0, 6, 2, 3, 4, 5];
+const featuresFunction = {
+  '0' : getRowsCleared,
+  '1' : getWeightedBlocks,
+  '2' : getCumulativeHeight,
+  '3' : getRelativeHeight,
+  '4' : getHoles,
+  '5' : getRoughness,
+  '6' : getLargestHeight,
+  '7' : getRowCountWithAtLeastOneHole,
+  '8' : getSumOfWellDepths,
+};
+function getWeightedBlocks(){
+  removeShape();
+  sum = 0;
+  for (let i = 0 ; i < NUM_ROWS; i++){
+    for (let j = 0; j < NUM_COLUMNS; j++) {
+      if (grid[i][j] != 0) {
+        sum += i;
+      }
+    }
+  }
+  return sum;
+  applyShape()
+}
+function getRowCountWithAtLeastOneHole(){
+  removeShape();
+  sum = 0;
+  for (let i = 0 ; i < NUM_ROWS; i++){
+    row = false;
+    if ( !row )
+      for (let j = 0; j < NUM_COLUMNS; j++) {
+        if (grid[i][j] !== 0) {
+          row = true;
+          sum += 1;
+          break;
+        }
+      }
+  }
+  applyShape()
+  return sum;
+}
+function getSumOfWellDepths(){
+  removeShape();
+  sum = 0;
+  for (let i = 0 ; i < NUM_ROWS; i++){
+    for (let j = 0; j < NUM_COLUMNS; j++) {
+      if (grid[i][j] !== 0) {
+        sum += i;
+      }
+    }
+  }
+  applyShape()
+  return sum;
+}
 
+function getRowsCleared(value){
+  return value;
+}
 /**
  * Creates a child genome from the given parent genomes, and then attempts to mutate the child genome.
  * @param  {Genome} mum The first parent genome.
@@ -48,36 +110,46 @@
  		//unique id
  		id : Math.random(),
  		//all these params are randomly selected between the mom and dad genome
- 		rowsCleared: randomChoice(mum.rowsCleared, dad.rowsCleared),
- 		weightedHeight: randomChoice(mum.weightedHeight, dad.weightedHeight),
- 		cumulativeHeight: randomChoice(mum.cumulativeHeight, dad.cumulativeHeight),
- 		relativeHeight: randomChoice(mum.relativeHeight, dad.relativeHeight),
- 		holes: randomChoice(mum.holes, dad.holes),
- 		roughness: randomChoice(mum.roughness, dad.roughness),
+ 		//rowsCleared: randomChoice(mum.rowsCleared, dad.rowsCleared),
+ 		//weightedHeight: randomChoice(mum.weightedHeight, dad.weightedHeight),
+ 		//cumulativeHeight: randomChoice(mum.cumulativeHeight, dad.cumulativeHeight),
+ 		//relativeHeight: randomChoice(mum.relativeHeight, dad.relativeHeight),
+ 		//holes: randomChoice(mum.holes, dad.holes),
+ 		//roughness: randomChoice(mum.roughness, dad.roughness),
  		//no fitness. yet.
- 		fitness: -1
+ 		fitness: -1,
+ 		position: []
  	};
+ 	for (let index = 0 ; index < NUM_FEATURES; index ++)
+   {
+     child.position[index] = randomChoice(mum.position[index], dad.position[index]);
+   }
+  for (let i = 0 ; i < NUM_FEATURES; i++) {
+ 	  if (Math.random() < mutationRate) {
+ 		  child.position[i] = child.position[i] + Math.random() * mutationStep * 2 - mutationStep;
+ 	  }
+  }
  	//mutation time!
 
  	//we mutate each parameter using our mutationstep
- 	if (Math.random() < mutationRate) {
- 		child.rowsCleared = child.rowsCleared + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.weightedHeight = child.weightedHeight + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.cumulativeHeight = child.cumulativeHeight + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.relativeHeight = child.relativeHeight + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.holes = child.holes + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- 	if (Math.random() < mutationRate) {
- 		child.roughness = child.roughness + Math.random() * mutationStep * 2 - mutationStep;
- 	}
+ 	//if (Math.random() < mutationRate) {
+ 	//	child.rowsCleared = child.rowsCleared + Math.random() * mutationStep * 2 - mutationStep;
+ 	//}
+ 	// if (Math.random() < mutationRate) {
+ 	// 	child.weightedHeight = child.weightedHeight + Math.random() * mutationStep * 2 - mutationStep;
+ 	// }
+ 	// if (Math.random() < mutationRate) {
+ 	// 	child.cumulativeHeight = child.cumulativeHeight + Math.random() * mutationStep * 2 - mutationStep;
+ 	// }
+ 	// if (Math.random() < mutationRate) {
+ 	// 	child.relativeHeight = child.relativeHeight + Math.random() * mutationStep * 2 - mutationStep;
+ 	// }
+ 	// if (Math.random() < mutationRate) {
+ 	// 	child.holes = child.holes + Math.random() * mutationStep * 2 - mutationStep;
+ 	// }
+ 	// if (Math.random() < mutationRate) {
+ 	// 	child.roughness = child.roughness + Math.random() * mutationStep * 2 - mutationStep;
+ 	// }
  	return child;
  }
 
@@ -95,7 +167,7 @@
 
  		var oldX = [];
  		//for each iteration
- 		for (var t = -5; t <= 5; t++) {
+ 		for (var t = -3; t <= 3; t++) {
  			iterations++;
  			loadState(lastState);
  			//rotate shape
@@ -121,23 +193,30 @@
  					moveDownResults = moveDown();
  				}
  				//set the 7 parameters of a genome
- 				var algorithm = {
- 					rowsCleared: moveDownResults.rowsCleared,
- 					weightedHeight: Math.pow(getHeight(), 1.5),
- 					cumulativeHeight: getCumulativeHeight(),
- 					relativeHeight: getRelativeHeight(),
- 					holes: getHoles(),
- 					roughness: getRoughness()
- 				};
- 				//rate each move
- 				var rating = 0;
- 				rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
- 				rating += algorithm.weightedHeight * genomes[currentGenome].weightedHeight;
- 				rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
- 				rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
- 				rating += algorithm.holes * genomes[currentGenome].holes;
- 				rating += algorithm.roughness * genomes[currentGenome].roughness;
+ 			// 	var algorithm = {
+ 			// 		rowsCleared: moveDownResults.rowsCleared,
+ 			// 		weightedHeight: Math.pow(getHeight(), 1.5),
+ 			// 		cumulativeHeight: getCumulativeHeight(),
+ 			// 		relativeHeight: getRelativeHeight(),
+ 			// 		holes: getHoles(),
+ 			// 		roughness: getRoughness()
+ 			// 	};
+ 			// 	//rate each move
+ 			// 	var rating = 0;
+ 			// 	rating += algorithm.rowsCleared * genomes[currentGenome].rowsCleared;
+ 			// 	rating += algorithm.weightedHeight * genomes[currentGenome].weightedHeight;
+ 			// 	rating += algorithm.cumulativeHeight * genomes[currentGenome].cumulativeHeight;
+ 			// 	rating += algorithm.relativeHeight * genomes[currentGenome].relativeHeight;
+ 			// 	rating += algorithm.holes * genomes[currentGenome].holes;
+ 			// 	rating += algorithm.roughness * genomes[currentGenome].roughness;
  				//if the move loses the game, lower its rating
+ 				let rating = 0;
+ 				let algorithm = [];
+ 			  for (let i = 0; i < NUM_FEATURES; i ++)
+   			  algorithm[i] = featuresFunction[featuresChosen[i]](moveDownResults.rowsCleared);
+   			for (let i = 0 ; i < featuresChosen.length ; i++) {
+ 			  rating += algorithm[i] * genomes[currentGenome].position[i];
+ 			}
  				if (moveDownResults.lose) {
  					rating -= 500;
  				}
@@ -195,6 +274,7 @@ var grid = [
 gridBackup = clone(grid);
 const NUM_COLUMNS=6;
 const NUM_ROWS=12;
+const NUM_FEATURES=6;
 //Block shapes
 var shapes = {
 	I: [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]],
@@ -1091,7 +1171,7 @@ function myInitialize() {
  * Returns the height of the biggest column on the grid.
  * @return {Number} The absolute height.
  */
- function getHeight() {
+ function getLargestHeight() {
  	removeShape();
  	var peaks = Array(NUM_COLUMNS).fill(NUM_ROWS);
  	for (var row = 0; row < grid.length; row++) {
@@ -1102,7 +1182,7 @@ function myInitialize() {
  		}
  	}
  	applyShape();
- 	return NUM_ROWS - Math.min.apply(Math, peaks);
+ 	return Math.pow(NUM_ROWS - Math.min.apply(Math, peaks),1.5);
  }
 
 /**
@@ -1249,7 +1329,7 @@ module.exports = {
  getHolesArray: getHolesArray,
  getRoughness: getRoughness,
  getRelativeHeight: getRelativeHeight,
- getHeight: getHeight,
+ getLargestHeight: getLargestHeight,
  loadArchive: loadArchive,
  clone: clone,
  randomProperty: randomProperty,
