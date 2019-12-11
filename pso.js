@@ -1,5 +1,6 @@
 //max number of moves allowed in a generation
 var moveLimit = 200;
+const initialPopulationParamMultiplier = 1;
 
 //stores number of genomes, init at 50
 var populationSize = 50;
@@ -36,7 +37,7 @@ function createInitialPopulation() {
  		deadAtGeneration: []
  	};
  	for (let i = 0 ; i < NUM_FEATURES; i ++) {
- 	  genome.position[i] = Math.random() - 0.5;
+ 	  genome.position[i] = initialPopulationParamMultiplier * (Math.random() - 0.5);
  		genome.velocity[i] = Math.random() - 0.5;
  	}
  	//setPositionVectorForGenome(genome);
@@ -44,7 +45,6 @@ function createInitialPopulation() {
  	genome.personalBestFitness = 0;
  	//add them to the array
  	genomes.push(genome);
- 	
  }
  evaluateNextGenome();
  //console.log(genomes);
@@ -63,18 +63,6 @@ const mapIndexToName = {
   '3': 'relativeHeight',
   '4': 'holes',
   '5': 'roughness',
-};
-const featuresChosen = [0, 6, 2, 3, 4, 5];
-const featuresFunction = {
-  '0' : getRowsCleared,
-  '1' : getWeightedBlocks,
-  '2' : getCumulativeHeight,
-  '3' : getRelativeHeight,
-  '4' : getHoles,
-  '5' : getRoughness,
-  '6' : getLargestHeight,
-  '7' : getRowCountWithAtLeastOneHole,
-  '8' : getSumOfWellDepths,
 };
 function getRowsCleared(value){
   return value;
@@ -560,6 +548,18 @@ var gridBackup = clone(grid);
 const NUM_COLUMNS=6;
 const NUM_ROWS=12;
 const NUM_FEATURES=6;
+const featuresChosen = [0,6,2,3,4,5];
+const featuresFunction = {
+  '0' : getRowsCleared,
+  '1' : getWeightedBlocks,
+  '2' : getCumulativeHeight,
+  '3' : getRelativeHeight,
+  '4' : getHoles,
+  '5' : getRoughness,
+  '6' : getLargestHeight,
+  '7' : getRowCountWithAtLeastOneHole,
+  '8' : getSumOfWellDepths,
+};
 //Block colors
 var colors = ["F92338", "C973FF", "1C76BC", "FEE356", "53D504", "36E0FF", "F8931D"];
 
@@ -666,7 +666,7 @@ function initialize() {
 			//now draw elements
 			draw = true;
 			//now update the score
-			updateScore();
+			//updateScore();
 		}
 	};
 	//timer interval
@@ -839,7 +839,7 @@ function myInitialize() {
    	    //console.log("adjusting feature " + i)
    	    do {
    	    tempVector[i] =
-   	      (2/( generation / 3 + 0.8)) * currGenome.velocity[i]
+   	      (2/( generation / 2 + 0.8)) * currGenome.velocity[i]
    	        + 2 * ( Math.random()) * ( currGenome.personalBest[i] - currGenome.position[ i ] )
    	        + 2 * ( Math.random()) *( localStorage[ generation ].globalBest.position [ i ] - currGenome.position[ i ] );
    	     if ( isNaN(tempVector[i])  ) {
@@ -898,7 +898,7 @@ function myInitialize() {
 	//store archive, thanks JS localstorage! (short term memory)
 	//archive.elites.push(clone(genomes[0]));
  	//console.log("Elite's fitness: " + genomes[0].fitness);
- 	console.log(genomes.map( (k) => JSON.stringify(k.position)));
+ 	console.log(genomes.map( (k) => JSON.stringify(k.personalBestFitness) + "--" + JSON.stringify(k.fitness) + "--" + JSON.stringify(k.position)));
  	//console.log(genomes.map( (k) => k.position));
  	console.log("global fitness: " + localStorage[generation].globalBestFitness);
  	console.log(JSON.stringify(localStorage[generation].globalBest.position));
@@ -906,6 +906,7 @@ function myInitialize() {
 	//and set current gen
 	archive.currentGeneration = clone(generation);
   localStorage[generation].archive= archive;
+  console.log(getState());
 }
 
 
@@ -1001,9 +1002,9 @@ function myInitialize() {
  		//and set the old drawing to the current
  		draw = oldDraw;
  		//output the state to the screen
- 		output();
+ 		//output();
  		//and update the score
- 		updateScore();
+ 		//updateScore();
  	}
  }
 
@@ -1035,7 +1036,7 @@ function myInitialize() {
  		moveDown();
  	}
  	//output the state to the screen
- 	output();
+ 	//output();
  	//and update the score
  	//updateScore();
  }
@@ -1075,8 +1076,8 @@ function myInitialize() {
  	//apply shape, update the score and output the state to the screen
  	applyShape();
  	score++;
- 	updateScore();
- 	output();
+ 	//updateScore();
+ 	//output();
  	return result;
  }
 
@@ -1254,7 +1255,7 @@ function myInitialize() {
  */
  function reset() {
  	score = 0;
- 	grid = [[0,0,0,0,0,0,0,0,0,0],
+ 	 /*[[0,0,0,0,0,0,0,0,0,0],
  	[0,0,0,0,0,0,0,0,0,0],
  	[0,0,0,0,0,0,0,0,0,0],
  	[0,0,0,0,0,0,0,0,0,0],
@@ -1274,7 +1275,8 @@ function myInitialize() {
  	[0,0,0,0,0,0,0,0,0,0],
  	[0,0,0,0,0,0,0,0,0,0],
  	[0,0,0,0,0,0,0,0,0,0],
- 	];
+ 	];*/
+ 	grid = clone(gridBackup);
  	moves = 0;
  	generateBag();
  	nextShape();
@@ -1411,8 +1413,8 @@ function myInitialize() {
  	bagIndex = clone(state.bagIndex);
  	rndSeed = clone(state.rndSeed);
  	score = clone(state.score);
- 	output();
- 	updateScore();
+ 	//output();
+ 	//updateScore();
  }
 
 /**
