@@ -192,6 +192,7 @@ var grid = [
 [0,0,0,0,0,0],
 [0,0,0,0,0,0],
 ];
+gridBackup = clone(grid);
 const NUM_COLUMNS=6;
 const NUM_ROWS=12;
 //Block shapes
@@ -243,7 +244,7 @@ var draw = true;
 //how many so far?
 var movesTaken = 0;
 //max number of moves allowed in a generation
-var moveLimit = 500;
+var moveLimit = 200;
 //consists of move the 7 move parameters
 var moveAlgorithm = {};
 //set to highest rate move
@@ -477,7 +478,7 @@ function myInitialize() {
 	archive.genomes = clone(genomes);
 	//and set current gen
 	archive.currentGeneration = clone(generation);
-	console.log(JSON.stringify(archive));
+	// console.log(JSON.stringify(archive));
 	//store archive, thanks JS localstorage! (short term memory)
 	localStorage[generation]= JSON.stringify(archive);
 }
@@ -829,27 +830,7 @@ function myInitialize() {
  */
  function reset() {
  	score = 0;
- 	grid = [[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	[0,0,0,0,0,0,0,0,0,0],
- 	];
+ 	grid = clone(gridBackup);
  	moves = 0;
  	generateBag();
  	nextShape();
