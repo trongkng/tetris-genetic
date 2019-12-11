@@ -30,18 +30,21 @@ function createInitialPopulation() {
  		//(for example, if all the shapes on the grid lie completely flat, then the roughness would equal 0).
  		roughness:  initialPopulationParamMultiplier * (Math.random() - 0.5),*/
  		position: Array(NUM_FEATURES),
+ 		velocity: Array(NUM_FEATURES),
+
  		//velocity: Array(NUM_FEATURES),
  		deadAtGeneration: []
  	};
  	for (let i = 0 ; i < NUM_FEATURES; i ++) {
  	  genome.position[i] = Math.random() - 0.5;
- 	  //genome.velocity[i] = Math.random() - 0.5;
+ 		genome.velocity[i] = Math.random() - 0.5;
  	}
  	//setPositionVectorForGenome(genome);
  	genome.personalBest = clone(genome.position);
  	genome.personalBestFitness = 0;
  	//add them to the array
  	genomes.push(genome);
+ 	
  }
  evaluateNextGenome();
  //console.log(genomes);
@@ -113,29 +116,29 @@ function getRowsCleared(value){
  	//console.log(genomes);
  	console.log("end gnomes");
  }*/
-function makeChild(mum, dad) {
- //init the child given two genomes (its 7 parameters + initial fitness value)
- var child = {
- 	//unique id
- 	id : Math.random(),
- 	fitness: -1,
- 	position: []
- };
- for (let index = 0 ; index < NUM_FEATURES; index ++)
-   {
-     child.position[index] = randomChoice(mum.position[index], dad.position[index]);
-   }
+// function makeChild(mum, dad) {
+// //init the child given two genomes (its 7 parameters + initial fitness value)
+// var child = {
+// 	//unique id
+// 	id : Math.random(),
+// 	fitness: -1,
+// 	position: []
+// };
+// for (let index = 0 ; index < NUM_FEATURES; index ++)
+//   {
+//     child.position[index] = randomChoice(mum.position[index], dad.position[index]);
+//   }
  			  
- //mutation time!
+// //mutation time!
 
- //we mutate each parameter using our mutationstep
- for (let i = 0 ; i < NUM_FEATURES; i++) {
- 	if (Math.random() < mutationRate) {
- 		child.position[i] = child.position[i] + Math.random() * mutationStep * 2 - mutationStep;
- 	}
- }
- return child;
-}
+// //we mutate each parameter using our mutationstep
+// for (let i = 0 ; i < NUM_FEATURES; i++) {
+// 	if (Math.random() < mutationRate) {
+// 		child.position[i] = child.position[i] + Math.random() * mutationStep * 2 - mutationStep;
+// 	}
+// }
+// return child;
+// }
 
 /**
  * Creates a child genome from the given parent genomes, and then attempts to mutate the child genome.
@@ -796,9 +799,10 @@ function myInitialize() {
  	console.log("Elite's fitness: " + genomes[0].fitness);
 
  	//remove the tail end of genomes, focus on the fittest
- 	while(genomes.length > populationSize / 2) {
- 		genomes.pop();
- 	}
+ 	//while(genomes.length > populationSize / 2) {
+ 	//	genomes.pop();
+ 	//}
+ 	
  	//sum of the fitness for each genome
  	var totalFitness = 0;
  	for (var i = 0; i < genomes.length; i++) {
@@ -809,19 +813,83 @@ function myInitialize() {
 	function getRandomGenome() {
 		return genomes[randomWeightedNumBetween(0, genomes.length - 1)];
 	}
+	if ( !localStorage[generation] ) localStorage[generation] = {};
+  localStorage[generation].globalBestFitness = localStorage[generation - 1].globalBestFitness;
+  //console.log(localStorage);
+  //console.log("generation = " + generation);
+  //console.log(localStorage[generation - 1].globalBest);
+  localStorage[generation].globalBest = clone(localStorage[generation - 1].globalBest);
+  
+  //console.log("start adjusting genomes")
+  for (let currIndex = 0; currIndex < populationSize; currIndex ++ ) {
+    //console.log("adjusting genome " + currIndex)
+   	let currGenome = genomes[currIndex];
+   	//if (currGenome.alive == -2) continue;
+   	let tempVector = Array(NUM_FEATURES); // tempVelocity
+   	//console.log("currIndex " + currIndex);
+   	//console.log(currGenome);
+   	//console.log("before");
+   	let sum = 0;
+   	if (!currGenome) {
+   	  console.log("currIndex = " + currIndex);
+   	  console.log(genomes.length);
+   	  console.log(populationSize);
+   	}
+   	for ( let i = 0; i < NUM_FEATURES; i++ ) {//personal best - current //global best - current
+   	    //console.log("adjusting feature " + i)
+   	    do {
+   	    tempVector[i] =
+   	      (2/( generation / 3 + 0.8)) * currGenome.velocity[i]
+   	        + 2 * ( Math.random()) * ( currGenome.personalBest[i] - currGenome.position[ i ] )
+   	        + 2 * ( Math.random()) *( localStorage[ generation ].globalBest.position [ i ] - currGenome.position[ i ] );
+   	     if ( isNaN(tempVector[i])  ) {
+     	     console.log("tempVelocity for i = " + i);
+     	     console.log(tempVector[i]);
+     	     console.log(currGenome.velocity[i]);
+     	     console.log(currGenome.personalBest[i]);
+     	     console.log(currGenome.position[ i ]);
+     	     console.log(localStorage[ generation ].globalBest.position [ i ]);
+   	     }
+   	     
+   	      sum = currGenome.position[i] +  tempVector[i];
+   	      //console.log("sum is " + sum);
+   	    } while ( false );
+   	    currGenome.velocity[i] =tempVector[i];
+   	    currGenome.position[i] += currGenome.velocity[i];
+   	  }
+      //console.log("genome before being passed to sync");
+      //console.log(currGenome);
+
+   	  if (currGenome.personalBestFitness < currGenome.fitness ) {
+   	    for (i = 0 ; i < NUM_FEATURES; i++ ) {
+   	      currGenome.personalBest[i] = currGenome.position[i];
+   	    }
+   	    currGenome.personalBestFitness = currGenome.fitness;
+   	    if (localStorage[generation].globalBestFitness < currGenome.fitness ) {
+     	    for (i = 0 ; i < NUM_FEATURES; i++ ) {
+     	      localStorage[generation].globalBest.position[i] = currGenome.position[i];
+     	    }
+     	    localStorage[generation].globalBestFitness = currGenome.fitness;
+   	    }
+   	  }
+   	//console.log("after");
+   	//console.log(currGenome);
+  }
+  //console.log("end adjusting genomes")
+
 	//create children array
-	var children = [];
+	/*var children = [];
 	//add the fittest genome to array
 	children.push(clone(genomes[0]));
 	//add population sized amount of children
 	while (children.length < populationSize) {
 		//crossover between two random genomes to make a child
 		children.push(makeChild(getRandomGenome(), getRandomGenome()));
-	}
+	}*/
 	//create new genome array
-	genomes = [];
+	//genomes = [];
 	//to store all the children in
-	genomes = genomes.concat(children);
+	//genomes = genomes.concat(children);
 	//store this in our archive
 	archive.genomes = clone(genomes);
 	//and set current gen
@@ -830,10 +898,13 @@ function myInitialize() {
 	//store archive, thanks JS localstorage! (short term memory)
 	//archive.elites.push(clone(genomes[0]));
  	//console.log("Elite's fitness: " + genomes[0].fitness);
+ 	console.log(genomes.map( (k) => JSON.stringify(k.position)));
+ 	//console.log(genomes.map( (k) => k.position));
+ 	console.log("global fitness: " + localStorage[generation].globalBestFitness);
+ 	console.log(JSON.stringify(localStorage[generation].globalBest.position));
 	archive.genomes = clone(genomes);
 	//and set current gen
 	archive.currentGeneration = clone(generation);
-  localStorage[generation]= {};
   localStorage[generation].archive= archive;
 }
 
@@ -1597,7 +1668,7 @@ module.exports = {
  createInitialPopulation: createInitialPopulation,
  evaluateNextGenome: evaluateNextGenome,
  evolve: evolve,
- makeChild: makeChild,
+ //makeChild: makeChild,
  getAllPossibleMoves: getAllPossibleMoves,
  getHighestRatedMove: getHighestRatedMove,
  makeNextMove: makeNextMove,
