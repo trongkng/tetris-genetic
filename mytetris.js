@@ -657,9 +657,9 @@ function myInitialize() {
  		//and set the old drawing to the current
  		draw = oldDraw;
  		//output the state to the screen
- 		output();
+ 		//output();
  		//and update the score
- 		updateScore();
+ 		//updateScore();
  	}
  }
 
@@ -691,9 +691,9 @@ function myInitialize() {
  		moveDown();
  	}
  	//output the state to the screen
- 	output();
+ 	//output();
  	//and update the score
- 	updateScore();
+ 	//updateScore();
  }
 
 /**
@@ -731,8 +731,8 @@ function myInitialize() {
  	//apply shape, update the score and output the state to the screen
  	applyShape();
  	score++;
- 	updateScore();
- 	output();
+ 	//updateScore();
+ 	//output();
  	return result;
  }
 
@@ -1047,8 +1047,8 @@ function myInitialize() {
  	bagIndex = clone(state.bagIndex);
  	rndSeed = clone(state.rndSeed);
  	score = clone(state.score);
- 	output();
- 	updateScore();
+ 	//output();
+ 	//updateScore();
  }
 
 /**
